@@ -1,0 +1,11 @@
+{
+  "src": [
+    "pages/LoginPage",
+    "pages/HomePage",
+    "pages/DailyDetailPage",
+    "pages/WeeklyReportPage",
+    "pages/DoctorHomePage",
+    "pages/PatientDetailPage",
+    "pages/TodayPage"
+  ]
+}

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>老年痴呆早期监测 - 家用机器人/信息系统 原型</title>
+	<style>
+		:root {
+			--bg: #0f1220;
+			--panel: #14182b;
+			--muted: #8e95a9;
+			--text: #e6e9f2;
+			--brand1: #6f8bff;
+			--brand2: #9b66ff;
+			--accent: #21d4fd;
+			--danger: #ff6b6b;
+			--success: #3ddc97;
+			--warn: #ffb454;
+			--shadow: 0 10px 30px rgba(9, 14, 34, 0.5);
+		}
+
+		* { box-sizing: border-box; }
+		html, body { height: 100%; }
+		body {
+			margin: 0;
+			font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+			background: radial-gradient(1000px 600px at 10% 10%, #1a1f3b 0%, #0f1220 50%, #0b0e1a 100%);
+			color: var(--text);
+		}
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 16px;
+			display: grid;
+			grid-template-columns: 420px 1fr;
+			gap: 16px;
+			align-items: start;
+		}
+
+		/* 手机预览外框 */
+		.phone-frame {
+			width: 390px;
+			height: 780px;
+			border-radius: 36px;
+			padding: 14px;
+			background: linear-gradient(145deg, #0b0e1a, #161b31);
+			box-shadow: inset 0 0 0 2px rgba(255,255,255,0.06), var(--shadow);
+			position: relative;
+		}
+		.notch {
+			position: absolute;
+			top: 8px; left: 50%; transform: translateX(-50%);
+			width: 160px; height: 22px; background: #0b0e1a; border-radius: 0 0 14px 14px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.5) inset;
+			z-index: 3;
+		}
+		.phone-screen {
+			position: relative;
+			width: 100%; height: 100%; border-radius: 28px; overflow: hidden;
+			background: radial-gradient(1200px 600px at 50% -20%, rgba(111,139,255,0.25), rgba(155,102,255,0.12) 40%, transparent 70%), linear-gradient(180deg, #14182b, #101427);
+		}
+
+		.header {
+			display: flex; align-items: center; justify-content: space-between;
+			padding: 16px 16px 8px;
+			backdrop-filter: blur(6px);
+		}
+		.brand {
+			display: flex; align-items: center; gap: 10px; font-weight: 700;
+		}
+		.brand-badge { width: 28px; height: 28px; border-radius: 10px; background: linear-gradient(135deg, var(--brand1), var(--brand2)); display: grid; place-items: center; box-shadow: var(--shadow); }
+		.brand-badge svg { width: 18px; height: 18px; color: white; }
+		.header-time { font-size: 12px; color: var(--muted); }
+
+		.role-switch {
+			padding: 0 16px 8px; display: flex; gap: 8px;
+		}
+		.segmented {
+			background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06);
+			border-radius: 12px; padding: 4px; display: inline-flex; gap: 4px;
+		}
+		.segmented button {
+			appearance: none; border: 0; padding: 8px 12px; border-radius: 10px; color: var(--muted); background: transparent; cursor: pointer; font-weight: 600; font-size: 13px;
+		}
+		.segmented button.active { color: #0e1330; background: linear-gradient(135deg, var(--accent), #7ef9d7); box-shadow: 0 4px 16px rgba(33, 212, 253, 0.35); }
+
+		.content { padding: 4px 16px 16px; }
+		.section-title { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
+		.section-title h3 { margin: 0; font-size: 14px; color: #cfd6ff; letter-spacing: .5px; }
+		.badge {
+			font-size: 12px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: var(--muted);
+		}
+		.badge.danger { color: #ffefef; background: rgba(255, 107, 107, 0.1); border-color: rgba(255, 107, 107, 0.35); }
+		.badge.warn { color: #fff6e8; background: rgba(255, 180, 84, 0.1); border-color: rgba(255, 180, 84, 0.35); }
+		.badge.success { color: #eafff6; background: rgba(61, 220, 151, 0.12); border-color: rgba(61, 220, 151, 0.35); }
+
+		.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+		#view-child .grid { grid-template-columns: 1fr; gap: 12px; }
+		.card {
+			background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+			border: 1px solid rgba(255,255,255,0.08);
+			border-radius: 16px; padding: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+			cursor: pointer; position: relative; transition: transform .2s ease, box-shadow .2s ease;
+		}
+		.card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.35); }
+		.card h4 { margin: 0; font-size: 13px; color: #e9ecff; }
+		.card p { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+		.card .value { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
+		.card .trend { position: absolute; right: 10px; top: 10px; font-size: 11px; padding: 4px 8px; border-radius: 999px; }
+		.trend.up { background: rgba(61, 220, 151, .16); color: #a8ffdc; }
+		.trend.down { background: rgba(255, 107, 107, .16); color: #ffc9c9; }
+
+		.accordion { margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 8px; display: none; }
+		.accordion p { margin: 6px 0; line-height: 1.5; }
+		.accordion .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+		.mini span { font-size: 11px; color: #cbd2ff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 8px; }
+
+		.alert {
+			margin-top: 10px; padding: 10px 12px; border-radius: 14px; display: flex; gap: 8px; align-items: center;
+			background: linear-gradient(180deg, rgba(255,180,84,.16), rgba(255,180,84,.08)); border: 1px solid rgba(255,180,84,.35);
+			color: #fff3d6;
+		}
+		.alert svg { flex: none; width: 18px; height: 18px; }
+
+		.tabs { display: flex; gap: 6px; background: rgba(255,255,255,0.06); padding: 4px; border-radius: 10px; }
+		.tabs button { border: 0; background: transparent; color: var(--muted); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+		.tabs button.active { color: #0e1330; background: linear-gradient(135deg, var(--brand1), var(--brand2)); }
+		.tab-panel { display: none; }
+		.tab-panel.active { display: block; }
+
+		/* 左右布局旁的说明 */
+		.notes {
+			background: rgba(255,255,255,0.04);
+			border: 1px solid rgba(255,255,255,0.08);
+			border-radius: 16px; padding: 16px; box-shadow: var(--shadow);
+			max-height: 780px; overflow: auto;
+		}
+		/* 工具条与按钮 */
+		.toolbar { display: flex; gap: 8px; align-items: center; margin: 6px 0 10px; }
+		.button {
+			border: 0; cursor: pointer; font-weight: 700; font-size: 12px; letter-spacing: .3px;
+			color: #0e1330; padding: 8px 12px; border-radius: 10px;
+			background: linear-gradient(135deg, var(--accent), #7ef9d7);
+			box-shadow: 0 4px 14px rgba(33, 212, 253, 0.3);
+		}
+		.button.secondary { color: #cfd6ff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+
+		/* 使整个页面尽量一屏展示 */
+		@media (min-width: 1100px) {
+			.container { height: 100vh; align-items: center; }
+		}
+		@media (max-width: 980px) {
+			.container { grid-template-columns: 1fr; }
+			.notes { max-height: unset; }
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<!-- 手机端原型预览 -->
+		<div class="phone-frame" aria-label="移动端预览">
+			<div class="notch"></div>
+			<div class="phone-screen">
+				<div class="header">
+					<div class="brand">
+						<div class="brand-badge" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-7z" />
+							</svg>
+						</div>
+						<span>关爱·守护</span>
+					</div>
+					<div class="header-time" id="headerTime">周四 10:24</div>
+				</div>
+
+				<div class="role-switch">
+					<div class="segmented" role="tablist" aria-label="角色切换">
+						<button class="active" data-role="child" aria-selected="true">子女</button>
+						<button data-role="other" aria-selected="false">其他角色</button>
+					</div>
+				</div>
+
+				<div class="content">
+					<!-- 子女视图 -->
+					<div id="view-child" class="view">
+						<div class="section-title">
+							<h3>父母日常状态总览</h3>
+							<span class="badge success">早期风险：低</span>
+						</div>
+						<div class="toolbar">
+							<button id="btn-refresh" class="button">刷新数据</button>
+							<span id="refresh-status" style="font-size:12px; color:#9aa3d8;">上次更新：—</span>
+						</div>
+						<div class="grid">
+							<div class="card" data-acc="acc-voice-recent">
+								<div class="trend up">语音↑</div>
+								<h4>近期语音交流文本</h4>
+								<p class="value" id="voice-recent-count">近 3 天 14 段</p>
+								<p id="voice-recent-keywords">关键词：散步、做饭、天气</p>
+								<div id="acc-voice-recent" class="accordion" aria-hidden="true">
+									<div class="mini" id="voice-recent-samples">
+										<span>今早 09:12：「记得关火」</span>
+										<span>昨晚 20:05：「和邻居聊会儿」</span>
+									</div>
+									<p id="voice-recent-analysis">近期指令理解良好，语速平稳，复述能力正常。</p>
+								</div>
+							</div>
+
+							<div class="card" data-acc="acc-assessment">
+								<div class="trend up">预期↑</div>
+								<h4>评测预期结果</h4>
+								<p class="value" id="assessment-mmse">MMSE 27 ± 1</p>
+								<p id="assessment-risk">疑似进展：无 · 风险低</p>
+								<div id="acc-assessment" class="accordion" aria-hidden="true">
+									<div class="mini">
+										<span id="assessment-next">下次评测：2 周后</span>
+										<span id="assessment-focus">关注维度：记忆/定向力</span>
+									</div>
+									<p id="assessment-advice">建议每日 10 分钟回忆训练与 1 次家属视频沟通。</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="alert" role="status">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+							<span>注意：今日步数偏低，建议傍晚陪同散步 15 分钟。</span>
+						</div>
+
+						<div style="margin-top:10px;">
+							<div class="tabs" role="tablist" aria-label="数据视图切换">
+								<button class="active" data-tab="sum">摘要</button>
+								<button data-tab="timeline">今日时间线</button>
+							</div>
+							<div id="tab-sum" class="tab-panel active" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">系统基于穿戴设备、摄像头与语音交互数据进行融合分析，给出可操作建议。</p>
+							</div>
+							<div id="tab-timeline" class="tab-panel" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">08:10 早餐用药✓ · 10:20 与邻居聊天 · 12:30 午休 · 16:00 建议散步</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- 其他角色视图 -->
+					<div id="view-other" class="view" style="display:none;">
+						<div class="section-title">
+							<h3>按角色查看</h3>
+							<span class="badge warn">信息按权限分级呈现</span>
+						</div>
+						<div class="grid">
+							<div class="card" data-role-panel="care">
+								<div class="trend up">及时率↑</div>
+								<h4>护工视图</h4>
+								<p class="value">任务完成 92%</p>
+								<p>喂药、陪同、巡视</p>
+							</div>
+							<div class="card" data-role-panel="doctor">
+								<div class="trend up">MMSE</div>
+								<h4>医生视图</h4>
+								<p class="value">MMSE 27/30</p>
+								<p>近 1 月稳定</p>
+							</div>
+							<div class="card" data-role-panel="community">
+								<div class="trend down">异常↓</div>
+								<h4>社区视图</h4>
+								<p class="value">预警 1 条</p>
+								<p>门禁夜间出行</p>
+							</div>
+							<div class="card" data-role-panel="family">
+								<div class="trend up">满意度↑</div>
+								<h4>家属视图</h4>
+								<p class="value">满意度 4.7/5</p>
+								<p>沟通与反馈</p>
+							</div>
+						</div>
+
+						<div class="alert" role="status">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+							<span>点击上方卡片查看各角色关键指标说明。</span>
+						</div>
+
+						<div style="margin-top:10px;">
+							<div class="tabs" role="tablist" aria-label="角色详情切换">
+								<button class="active" data-role-tab="care">护工</button>
+								<button data-role-tab="doctor">医生</button>
+								<button data-role-tab="community">社区</button>
+								<button data-role-tab="family">家属</button>
+							</div>
+							<div id="role-care" class="tab-panel active" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">今日任务：按时喂药、餐后散步陪同 15 分钟、晚间巡视 2 次。</p>
+							</div>
+							<div id="role-doctor" class="tab-panel" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">近 3 个月：MMSE 稳定；建议进行 MoCA 每季度评估一次。</p>
+							</div>
+							<div id="role-community" class="tab-panel" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">社区关怀：周三下午记忆工作坊名额预留 1 位。</p>
+							</div>
+							<div id="role-family" class="tab-panel" role="tabpanel">
+								<p style="margin:10px 0 0; color:#cbd2ff; font-size:12px;">建议与父母进行 10 分钟视频通话，分享当日趣事。</p>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<!-- 设计说明侧栏（同屏展示，便于截图） -->
+		<aside class="notes">
+			<h2>原型设计说明</h2>
+			<div style="margin-bottom:8px;">
+				<span class="tag">移动端预览</span>
+				<span class="tag">一屏展示</span>
+				<span class="tag">交互可点</span>
+				<span class="tag">深色风格</span>
+			</div>
+			<ul>
+				<li><strong>角色策略：</strong>若只存在“子女”角色，则以家属关怀视角呈现日常状态与可执行建议；若包含护工/医生/社区等角色，提供对应的指标与权限分级展示。</li>
+				<li><strong>信息架构：</strong>顶部分段切换角色；子女视图以两大模块为主：近期语音交流文本、评测预期结果；下方提供摘要与时间线辅助理解。</li>
+				<li><strong>视觉风格：</strong>玻璃拟态卡片 + 渐变品牌色，提升亲和力与科技感；状态以颜色提示风险等级。</li>
+				<li><strong>交互说明：</strong>点击每张卡片可展开细节；切换“摘要/时间线”；在“其他角色”中点击卡片或下方标签查看不同角色说明。</li>
+				<li><strong>可用性：</strong>字号≥12pt，触摸热区≥40px；重要操作放在列表上方；关键提示以醒目条展示。</li>
+				<li><strong>扩展方向：</strong>后续可加入语音提示、异常轨迹回放、家庭群组共管等能力。</li>
+			</ul>
+			<p style="color:#9aa3d8; font-size:12px; margin-top:10px;">注：本页为高保真原型示意，用于评审与对齐需求。</p>
+		</aside>
+	</div>
+
+	<script>
+		// 动态时间
+		(function updateTime(){
+			const el = document.getElementById('headerTime');
+			const d = new Date();
+			const week = ['周日','周一','周二','周三','周四','周五','周六'];
+			const h = d.getHours().toString().padStart(2,'0');
+			const m = d.getMinutes().toString().padStart(2,'0');
+			el.textContent = week[d.getDay()] + ' ' + h + ':' + m;
+			setTimeout(updateTime, 15000);
+		})();
+
+		// 角色切换
+		const roleButtons = document.querySelectorAll('.segmented button');
+		const viewChild = document.getElementById('view-child');
+		const viewOther = document.getElementById('view-other');
+		roleButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				roleButtons.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				const role = btn.getAttribute('data-role');
+				if (role === 'child') {
+					viewChild.style.display = '';
+					viewOther.style.display = 'none';
+				} else {
+					viewChild.style.display = 'none';
+					viewOther.style.display = '';
+				}
+			});
+		});
+
+		// 卡片展开折叠
+		document.querySelectorAll('.card[data-acc]').forEach(card => {
+			card.addEventListener('click', () => {
+				const id = card.getAttribute('data-acc');
+				const acc = document.getElementById(id);
+				const open = acc.style.display === 'block';
+				acc.style.display = open ? 'none' : 'block';
+				acc.setAttribute('aria-hidden', open ? 'true' : 'false');
+			});
+		});
+
+		// 子女视图 tabs
+		const tabButtons = document.querySelectorAll('[data-tab]');
+		tabButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				tabButtons.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				const key = btn.getAttribute('data-tab');
+				document.querySelectorAll('#tab-sum, #tab-timeline').forEach(p => p.classList.remove('active'));
+				document.getElementById('tab-' + key).classList.add('active');
+			});
+		});
+
+		// 其他角色：点击卡片或标签切换
+		const roleCards = document.querySelectorAll('.card[data-role-panel]');
+		const roleTabs = document.querySelectorAll('[data-role-tab]');
+		function activateRole(role){
+			roleTabs.forEach(b => b.classList.toggle('active', b.getAttribute('data-role-tab') === role));
+			document.querySelectorAll('#role-care,#role-doctor,#role-community,#role-family').forEach(p => p.classList.remove('active'));
+			document.getElementById('role-' + role).classList.add('active');
+		}
+		roleCards.forEach(c => c.addEventListener('click', () => activateRole(c.getAttribute('data-role-panel'))));
+		roleTabs.forEach(t => t.addEventListener('click', () => activateRole(t.getAttribute('data-role-tab'))));
+
+		// ===== 数据获取：语音/评测 =====
+		async function safeFetch(url, options){
+			try {
+				const res = await fetch(url, options);
+				if (!res.ok) throw new Error('HTTP ' + res.status);
+				return await res.json();
+			} catch (e) {
+				return { __error: String(e) };
+			}
+		}
+
+		function updateRefreshStatus(){
+			const el = document.getElementById('refresh-status');
+			const now = new Date();
+			const h = now.getHours().toString().padStart(2,'0');
+			const m = now.getMinutes().toString().padStart(2,'0');
+			el.textContent = '上次更新：' + h + ':' + m;
+		}
+
+		async function loadVoiceRecent(){
+			// 示例：替换为真实接口 e.g. '/api/voice/recent?days=3'
+			let data = await safeFetch('/api/voice/recent');
+			if (data.__error) {
+				// 回退本地示例数据
+				data = { count: 14, keywords: ['散步','做饭','天气'], samples: ['今早 09:12：「记得关火」','昨晚 20:05：「和邻居聊会儿」'], analysis: '近期指令理解良好，语速平稳，复述能力正常。' };
+			}
+			document.getElementById('voice-recent-count').textContent = '近 3 天 ' + (data.count ?? 0) + ' 段';
+			document.getElementById('voice-recent-keywords').textContent = '关键词：' + (data.keywords ?? []).join('、');
+			const samplesWrap = document.getElementById('voice-recent-samples');
+			samplesWrap.innerHTML = '';
+			(data.samples ?? []).slice(0, 4).forEach(text => {
+				const span = document.createElement('span');
+				span.textContent = text;
+				samplesWrap.appendChild(span);
+			});
+			document.getElementById('voice-recent-analysis').textContent = data.analysis ?? '';
+		}
+
+		async function loadAssessment(){
+			// 示例：替换为真实接口 e.g. '/api/assessment/expected'
+			let data = await safeFetch('/api/assessment/expected');
+			if (data.__error) {
+				data = { mmse: '27 ± 1', risk: '疑似进展：无 · 风险低', next: '2 周后', focus: '记忆/定向力', advice: '建议每日 10 分钟回忆训练与 1 次家属视频沟通。' };
+			}
+			document.getElementById('assessment-mmse').textContent = 'MMSE ' + (data.mmse ?? '—');
+			document.getElementById('assessment-risk').textContent = data.risk ?? '';
+			document.getElementById('assessment-next').textContent = '下次评测：' + (data.next ?? '—');
+			document.getElementById('assessment-focus').textContent = '关注维度：' + (data.focus ?? '—');
+			document.getElementById('assessment-advice').textContent = data.advice ?? '';
+		}
+
+		async function refreshAll(){
+			document.getElementById('btn-refresh')?.setAttribute('disabled','true');
+			await Promise.all([loadVoiceRecent(), loadAssessment()]);
+			updateRefreshStatus();
+			document.getElementById('btn-refresh')?.removeAttribute('disabled');
+		}
+
+		document.getElementById('btn-refresh')?.addEventListener('click', refreshAll);
+		// 首次加载 & 定时刷新（可按需调整）
+		refreshAll();
+		setInterval(refreshAll, 1000 * 60 * 5);
+	</script>
+</body>
+</html>

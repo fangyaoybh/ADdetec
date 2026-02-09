@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: esdk-obs-python
+Version: 3.25.8
+Summary: OBS Python SDK
+Home-page: 
+License: Apache-2.0
+Keywords: obs,python
+Platform: Independant
+Requires-Dist: pycryptodome>=3.10.1
+Requires-Dist: requests>=2.27.0
+Requires-Dist: crcmod>=1.7
+
+OBS Python SDK
